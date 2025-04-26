@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Asteroid Game</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: url('https://i.imgur.com/4NJlZpU.jpeg') no-repeat center center fixed;
+      background-size: cover;
+      font-family: 'Orbitron', Arial, sans-serif;
+    }
+    #gameCanvas {
+      display: block;
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+    .player-info {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: white;
+      font-size: 24px;
+      font-family: 'Orbitron', sans-serif;
+      z-index: 10;
+      text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff;
+      background: rgba(0,0,0,0.5);
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #00ffff;
+    }
+    .health-bar {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      color: white;
+      font-size: 24px;
+      font-family: 'Orbitron', sans-serif;
+      z-index: 10;
+      text-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000;
+      background: rgba(0,0,0,0.5);
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #ff0000;
+    }
+    .heart {
+      color: red;
+      font-size: 28px;
+      margin-left: 5px;
+      text-shadow: 0 0 10px #ff0000;
+      animation: pulse 0.5s infinite alternate;
+    }
+    /* SHOP Styles */
+    .home, .page {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      display: none;
+      z-index: 20;
+    }
+    .home {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 32px;
+      color: #00ffff;
+      font-family: 'Orbitron', Arial, sans-serif;
+      background: rgba(0,0,0,0.8);
+      text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+      animation: pulse 2s infinite;
+    }
+    .page {
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      background: rgba(0,0,0,0.8);
+      font-family: 'Orbitron', Arial, sans-serif;
+      backdrop-filter: blur(5px);
+    }
+    @keyframes pulse {
+      0% { text-shadow: 0 0 5px #00ffff; }
+      50% { text-shadow: 0 0 20px #00ffff, 0 0 30px #00ffff; }
+      100% { text-shadow: 0 0 5px #00ffff; }
+    }
+    .shop-title {
+      font-size: 60px;
+      margin-top: 20px;
+      font-weight: bold;
+      color: #ff00ff;
+      text-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff;
+      animation: pulse 2s infinite;
+    }
+    .compartments {
+      display: flex;
+      gap: 40px;
+      justify-content: center;
+      align-items: center;
+      margin-top: 40px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .compartment {
+      width: 250px;
+      height: 180px;
+      background: linear-gradient(145deg, #222, #333);
+      border: 2px solid #00ffff;
+      box-shadow: 0 0 20px #00ffff, inset 0 0 10px #00ffff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      font-size: 22px;
+      color: #ffffff;
+      border-radius: 20px;
+      transition: all 0.4s;
+      cursor: pointer;
+      padding: 15px;
+      position: relative;
+      overflow: hidden;
+    }
+    .compartment:hover {
+      transform: scale(1.1);
+      background: linear-gradient(145deg, #333, #555);
+      box-shadow: 0 0 30px #ff00ff, inset 0 0 15px #ff00ff;
+      color: #00ffff;
+    }
+    .compartment::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(
+        to bottom right,
+        rgba(255,255,255,0) 0%,
+        rgba(255,255,255,0) 45%,
+        rgba(255,255,255,0.3) 50%,
+        rgba(255,255,255,0) 55%,
+        rgba(255,255,255,0) 100%
+      );
+      transform: rotate(30deg);
+      transition: all 0.7s;
+      opacity: 0;
+    }
+    .compartment:hover::before {
+      opacity: 1;
+      top: -30%;
+      left: -30%;
+    }
+    .compartment-icon {
+      font-size: 40px;
+      margin-bottom: 10px;
+    }
+    .nyan-container {
+      margin-top: 20px;
+      animation: float 3s ease-in-out infinite;
+    }
+    .nyan-container img {
+      width: 300px;
+      height: auto;
+      filter: drop-shadow(0 0 10px #ff00ff);
+    }
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
+      100% { transform: translateY(0px); }
+    }
+    .back-button {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 30;
+      padding: 10px 20px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid #00ffff;
+      border-radius: 10px;
+      transition: all 0.3s;
+    }
+    .back-button:hover {
+      background: rgba(0,255,255,0.2);
+      box-shadow: 0 0 10px #00ffff;
+    }
+    
+    /* Entry and End Game Pages */
+    .screen {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: rgba(0,0,0,0.9);
+      z-index: 100;
+      color: white;
+      text-align: center;
+      backdrop-filter: blur(5px);
+    }
+    
+    .entry-screen {
+      display: flex;
+    }
+    
+    .end-screen {
+      display: none;
+    }
+    
+    .title {
+      font-size: 82px;
+      margin-bottom: 40px;
+      color: #00ffff;
+      text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+      animation: pulse 2s infinite;
+      letter-spacing: 5px;
+    }
+    
+    .subtitle {
+      font-size: 28px;
+      margin-bottom: 40px;
+      color: #ff00ff;
+      text-shadow: 0 0 5px #ff00ff;
+    }
+    
+    .btn {
+      padding: 15px 30px;
+      font-size: 20px;
+      background: linear-gradient(145deg, #222, #333);
+      border: 2px solid #00ffff;
+      color: white;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin: 10px;
+      font-family: 'Orbitron', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .btn:hover {
+      background: linear-gradient(145deg, #333, #555);
+      box-shadow: 0 0 20px #00ffff;
+      transform: scale(1.05);
+      color: #00ffff;
+    }
+    
+    .btn::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -60%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(
+        to bottom right,
+        rgba(255,255,255,0) 0%,
+        rgba(255,255,255,0) 45%,
+        rgba(255,255,255,0.3) 50%,
+        rgba(255,255,255,0) 55%,
+        rgba(255,255,255,0) 100%
+      );
+      transform: rotate(30deg);
+      transition: all 0.7s;
+    }
+    
+    .btn:hover::after {
+      left: 100%;
+    }
+    
+    .final-score {
+      font-size: 42px;
+      margin: 30px 0;
+      color: #00ff00;
+      text-shadow: 0 0 10px #00ff00;
+      animation: pulse 1.5s infinite;
+    }
+    
+    .controls {
+      margin-top: 30px;
+      font-size: 18px;
+      color: #aaa;
+      background: rgba(0,0,0,0.5);
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid #00ffff;
+      max-width: 600px;
+    }
+    
+    #playerNameInput {
+      padding: 15px 30px;
+      font-size: 18px;
+      background: rgba(255,255,255,0.9);
+      border: 2px solid #00ffff;
+      color: #333;
+      border-radius: 10px;
+      margin: 10px;
+      font-family: 'Orbitron', sans-serif;
+      text-align: center;
+      transition: all 0.3s;
+    }
+    
+    #playerNameInput:focus {
+      outline: none;
+      box-shadow: 0 0 20px #00ffff;
+      transform: scale(1.05);
+    }
+    
+    .particles {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+    
+    .explosion {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      pointer-events: none;
+      background: radial-gradient(circle, rgba(255,100,0,0.8) 0%, rgba(255,50,0,0) 70%);
+      border-radius: 50%;
+      transform: scale(0);
+      animation: explode 0.5s forwards;
+    }
+    
+    @keyframes explode {
+      0% { transform: scale(0); opacity: 1; }
+      100% { transform: scale(3); opacity: 0; }
+    }
+    
+    .coin-effect {
+      position: absolute;
+      font-size: 24px;
+      color: gold;
+      font-weight: bold;
+      text-shadow: 0 0 5px #000;
+      animation: coinFloat 1s forwards;
+      pointer-events: none;
+    }
+    
+    @keyframes coinFloat {
+      0% { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(-100px); opacity: 0; }
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+  <div class="particles" id="particles"></div>
+  
+  <!-- Entry Screen -->
+  <div class="screen entry-screen" id="entryScreen">
+    <h1 class="title">ASTEROID GAME</h1>
+    <p class="subtitle">Evită asteroizii și câștigă cât mai mulți bani!</p>
+    <input type="text" id="playerNameInput" placeholder="Introdu numele tău">
+    <button class="btn" id="startBtn">START GAME</button>
+    <div class="controls">
+      <p>Controale:</p>
+      <p>Mișcă mouse-ul pentru a controla racheta</p>
+      <p>Apasă Z pentru a deschide magazinul</p>
+      <p>Apasă X pentru a închide magazinul</p>
+    </div>
+  </div>
+  
+  <!-- Game Screen -->
+  <div class="player-info" id="playerInfo">
+    Jucător: <span id="nameDisplay">Anonim</span><br>
+    Bani: <span id="moneyDisplay">0</span> <i class="fas fa-coins" style="color: gold;"></i>
+  </div>
+  <div class="health-bar">
+    Viață: <span id="healthDisplay"></span>
+  </div>
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- Shop Elements -->
+  <div class="page" id="page">
+    <div class="back-button" id="backButton"><i class="fas fa-arrow-left"></i> Înapoi la joc (X)</div>
+    <div class="shop-title">SHOP</div>
+    <div class="compartments">
+      <div class="compartment" id="healthUpgrade">
+        <div class="compartment-icon"><i class="fas fa-heartbeat" style="color: red;"></i></div>
+        <div id="healthUpgradeText">+1 ❤️ $50</div>
+      </div>
+      <div class="compartment" id="rocketUpgrade">
+        <div class="compartment-icon"><i class="fas fa-rocket" style="color: #00ffff;"></i></div>
+        <div id="rocketUpgradeText">Mărire Rachetă $100</div>
+      </div>
+      <div class="compartment" id="speedUpgrade">
+        <div class="compartment-icon"><i class="fas fa-tachometer-alt" style="color: #ff00ff;"></i></div>
+        <div id="speedUpgradeText">Viteză Meteoriți *0.95 $75</div>
+      </div>
+    </div>
+    <div class="nyan-container">
+      <img src="https://media.giphy.com/media/sIIhZliB2McAo/giphy.gif" alt="Nyan Cat">
+    </div>
+  </div>
+
+  <!-- End Game Screen -->
+  <div class="screen end-screen" id="endScreen">
+    <h1 class="title">GAME OVER</h1>
+    <div class="final-score" id="finalScore">Scor final: 0</div>
+    <div id="highScoreDisplay">Cel mai bun scor: 0</div>
+    <button class="btn" id="restartBtn"><i class="fas fa-redo"></i> JOACĂ DIN NOU</button>
+  </div>
+
+  <script>
+    // Game Variables
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let asteroids = [];
+    const asteroidCount = 10;
+    const maxSize = 100;
+    const minSize = 40;
+    let asteroidSpeedMultiplier = 1;
+
+    let rocket = {
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+      width: 40,
+      height: 80,
+      speed: 5,
+      flameSize: 0,
+      flameDirection: 1,
+      engineParticles: []
+    };
+
+    let money = 0;
+    let health = 5;
+    let gameRunning = false;
+    let playerName = "Anonim";
+    let highScore = localStorage.getItem('asteroidHighScore') || 0;
+    let particles = [];
+    let explosions = [];
+    let coinEffects = [];
+
+    // DOM Elements
+    const entryScreen = document.getElementById('entryScreen');
+    const endScreen = document.getElementById('endScreen');
+    const startBtn = document.getElementById('startBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const playerNameInput = document.getElementById('playerNameInput');
+    const finalScoreDisplay = document.getElementById('finalScore');
+    const highScoreDisplay = document.getElementById('highScoreDisplay');
+
+    // Shop Variables
+    const healthUpgrade = document.getElementById('healthUpgrade');
+    const healthUpgradeText = document.getElementById('healthUpgradeText');
+    const rocketUpgrade = document.getElementById('rocketUpgrade');
+    const rocketUpgradeText = document.getElementById('rocketUpgradeText');
+    const speedUpgrade = document.getElementById('speedUpgrade');
+    const speedUpgradeText = document.getElementById('speedUpgradeText');
+    const backButton = document.getElementById('backButton');
+
+    // Initialize game
+    function initGame() {
+      // Reset game state
+      money = 0;
+      health = 5;
+      gameRunning = true;
+      asteroidSpeedMultiplier = 1;
+      rocket = {
+        x: canvas.width / 2,
+        y: canvas.height / 2,
+        width: 40,
+        height: 80,
+        speed: 5,
+        flameSize: 0,
+        flameDirection: 1,
+        engineParticles: []
+      };
+      
+      document.getElementById('moneyDisplay').textContent = money;
+      document.getElementById('nameDisplay').textContent = playerName;
+      updateHealthDisplay();
+      createStars();
+      generateAsteroids();
+      createParticles();
+      animate();
+    }
+
+    function updateHealthDisplay() {
+      const healthDisplay = document.getElementById('healthDisplay');
+      healthDisplay.innerHTML = '';
+      for (let i = 0; i < health; i++) {
+        healthDisplay.innerHTML += '<span class="heart">♥</span>';
+      }
+    }
+
+    class Asteroid {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = -Math.random() * 500;
+        this.size = Math.random() * (maxSize - minSize) + minSize;
+        this.speed = (Math.random() * 3 + 2) * asteroidSpeedMultiplier;
+        this.angle = Math.random() * 2 * Math.PI;
+        this.rotationSpeed = Math.random() * 0.1 - 0.05;
+        this.active = true;
+        this.color1 = `hsl(${Math.random() * 60 + 20}, 80%, 50%)`; // Orange-red
+        this.color2 = `hsl(${Math.random() * 60 + 20}, 80%, 30%)`; // Darker version
+        this.spikes = Math.floor(Math.random() * 5) + 5;
+        this.spikeDepth = Math.random() * 0.3 + 0.2;
+        this.glowColor = `rgba(255, ${Math.floor(Math.random() * 100 + 100)}, 0, 0.8)`;
+      }
+
+      update() {
+        if (!this.active) return;
+
+        this.y += this.speed;
+        this.angle += this.rotationSpeed;
+
+        if (this.y > canvas.height) {
+          this.active = false;
+          health--;
+          updateHealthDisplay();
+          createExplosion(this.x, this.y, this.size);
+          
+          if (health <= 0) {
+            gameOver();
+          }
+          
+          return false;
+        }
+        return true;
+      }
+
+      draw() {
+        if (!this.active) return;
+
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+
+        // Glow effect
+        ctx.beginPath();
+        ctx.arc(0, 0, this.size * 1.2, 0, Math.PI * 2);
+        ctx.fillStyle = this.glowColor;
+        ctx.shadowColor = this.glowColor;
+        ctx.shadowBlur = 20;
+        ctx.fill();
+        
+        // Create asteroid shape with spikes
+        ctx.beginPath();
+        
+        // Start at the top
+        ctx.moveTo(0, -this.size);
+        
+        // Draw the spiky shape
+        for (let i = 0; i < this.spikes; i++) {
+          const angle = (i / this.spikes) * Math.PI * 2;
+          const nextAngle = ((i + 1) / this.spikes) * Math.PI * 2;
+          
+          // Outer point
+          const outerRadius = this.size * (1 - this.spikeDepth);
+          const outerX = Math.sin(angle) * outerRadius;
+          const outerY = -Math.cos(angle) * outerRadius;
+          
+          // Inner point (spike)
+          const innerRadius = this.size;
+          const innerAngle = angle + (nextAngle - angle) / 2;
+          const innerX = Math.sin(innerAngle) * innerRadius;
+          const innerY = -Math.cos(innerAngle) * innerRadius;
+          
+          ctx.lineTo(outerX, outerY);
+          ctx.lineTo(innerX, innerY);
+        }
+        
+        // Close the path
+        ctx.closePath();
+
+        // Create gradient
+        const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.size);
+        gradient.addColorStop(0, this.color1);
+        gradient.addColorStop(1, this.color2);
+
+        ctx.fillStyle = gradient;
+        ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+        ctx.shadowBlur = 10;
+        ctx.fill();
+        
+        // Add some crater details
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        for (let i = 0; i < 3; i++) {
+          const craterSize = this.size * (Math.random() * 0.2 + 0.1);
+          const craterX = (Math.random() - 0.5) * this.size * 0.8;
+          const craterY = (Math.random() - 0.5) * this.size * 0.8;
+          
+          ctx.beginPath();
+          ctx.arc(craterX, craterY, craterSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        
+        ctx.restore();
+      }
+
+      checkCollision(rocket) {
+        if (!this.active) return false;
+
+        const dx = this.x - rocket.x;
+        const dy = this.y - rocket.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < this.size / 2 + rocket.width / 2) {
+          this.active = false;
+          const reward = Math.floor(this.size / 10);
+          money += reward;
+          document.getElementById('moneyDisplay').textContent = money;
+          createExplosion(this.x, this.y, this.size);
+          createCoinEffect(this.x, this.y, reward);
+          return true;
+        }
+        return false;
+      }
+    }
+
+    function createExplosion(x, y, size) {
+      explosions.push({
+        x: x,
+        y: y,
+        size: size,
+        progress: 0,
+        color: `rgba(255, ${Math.floor(Math.random() * 100 + 100)}, 0, 0.8)`
+      });
+    }
+
+    function drawExplosions() {
+      for (let i = explosions.length - 1; i >= 0; i--) {
+        const explosion = explosions[i];
+        explosion.progress += 0.02;
+        
+        if (explosion.progress >= 1) {
+          explosions.splice(i, 1);
+          continue;
+        }
+        
+        const currentSize = explosion.size * explosion.progress * 3;
+        const alpha = 1 - explosion.progress;
+        
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.beginPath();
+        ctx.arc(explosion.x, explosion.y, currentSize, 0, Math.PI * 2);
+        ctx.fillStyle = explosion.color;
+        ctx.shadowColor = explosion.color;
+        ctx.shadowBlur = 20;
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    function createCoinEffect(x, y, amount) {
+      coinEffects.push({
+        x: x,
+        y: y,
+        amount: amount,
+        progress: 0,
+        opacity: 1
+      });
+    }
+
+    function drawCoinEffects() {
+      ctx.font = 'bold 24px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      
+      for (let i = coinEffects.length - 1; i >= 0; i--) {
+        const effect = coinEffects[i];
+        effect.progress += 0.01;
+        effect.opacity = 1 - effect.progress;
+        effect.y -= 1;
+        
+        if (effect.progress >= 1) {
+          coinEffects.splice(i, 1);
+          continue;
+        }
+        
+        ctx.save();
+        ctx.globalAlpha = effect.opacity;
+        ctx.fillStyle = 'gold';
+        ctx.shadowColor = 'black';
+        ctx.shadowBlur = 5;
+        ctx.fillText(`+${effect.amount}`, effect.x, effect.y);
+        ctx.restore();
+      }
+    }
+
+    function drawRocket() {
+      ctx.save();
+      ctx.translate(rocket.x, rocket.y);
+      
+      // Update flame animation
+      rocket.flameSize += rocket.flameDirection * 0.2;
+      if (rocket.flameSize > 10 || rocket.flameSize < 5) {
+        rocket.flameDirection *= -1;
+      }
+      
+      // Draw rocket body with gradient
+      const bodyGradient = ctx.createLinearGradient(0, -rocket.height/2, 0, rocket.height/2);
+      bodyGradient.addColorStop(0, '#ff3333');
+      bodyGradient.addColorStop(1, '#cc0000');
+      
+      ctx.fillStyle = bodyGradient;
+      ctx.beginPath();
+      ctx.moveTo(0, -rocket.height/2);
+      ctx.lineTo(-rocket.width/2, rocket.height/2);
+      ctx.lineTo(rocket.width/2, rocket.height/2);
+      ctx.closePath();
+      ctx.shadowColor = 'rgba(255, 100, 0, 0.5)';
+      ctx.shadowBlur = 15;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      
+      // Draw rocket window with reflection
+      ctx.fillStyle = '#66ccff';
+      ctx.beginPath();
+      ctx.arc(0, -rocket.height/4, rocket.width/4, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Add window reflection
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.beginPath();
+      ctx.arc(0, -rocket.height/4 - rocket.width/8, rocket.width/8, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Draw rocket details
+      ctx.strokeStyle = '#ffcc00';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, -rocket.height/2);
+      ctx.lineTo(0, rocket.height/4);
+      ctx.stroke();
+      
+      // Draw rocket fins with gradient
+      const finGradient1 = ctx.createLinearGradient(-rocket.width/2, rocket.height/4, -rocket.width, rocket.height/2);
+      finGradient1.addColorStop(0, '#ff6666');
+      finGradient1.addColorStop(1, '#cc0000');
+      
+      ctx.fillStyle = finGradient1;
+      ctx.beginPath();
+      ctx.moveTo(-rocket.width/2, rocket.height/4);
+      ctx.lineTo(-rocket.width, rocket.height/2);
+      ctx.lineTo(-rocket.width/2, rocket.height/2);
+      ctx.closePath();
+      ctx.fill();
+      
+      const finGradient2 = ctx.createLinearGradient(rocket.width/2, rocket.height/4, rocket.width, rocket.height/2);
+      finGradient2.addColorStop(0, '#ff6666');
+      finGradient2.addColorStop(1, '#cc0000');
+      
+      ctx.fillStyle = finGradient2;
+      ctx.beginPath();
+      ctx.moveTo(rocket.width/2, rocket.height/4);
+      ctx.lineTo(rocket.width, rocket.height/2);
+      ctx.lineTo(rocket.width/2, rocket.height/2);
+      ctx.closePath();
+      ctx.fill();
+      
+      // Draw rocket flame with particles
+      const flameHeight = rocket.height/2 + rocket.flameSize;
+      const flameWidth = rocket.width/2 + rocket.flameSize/2;
+      
+      const flameGradient = ctx.createLinearGradient(0, rocket.height/2, 0, flameHeight);
+      flameGradient.addColorStop(0, '#ff9900');
+      flameGradient.addColorStop(0.5, '#ff3300');
+      flameGradient.addColorStop(1, '#ff0000');
+      
+      ctx.fillStyle = flameGradient;
+      ctx.beginPath();
+      ctx.moveTo(-rocket.width/4, rocket.height/2);
+      ctx.lineTo(0, flameHeight);
+      ctx.lineTo(rocket.width/4, rocket.height/2);
+      ctx.closePath();
+      ctx.shadowColor = 'rgba(255, 100, 0, 0.8)';
+      ctx.shadowBlur = 20;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      
+      // Add engine particles occasionally
+      if (Math.random() < 0.3) {
+        rocket.engineParticles.push({
+          x: (Math.random() - 0.5) * rocket.width/2,
+          y: rocket.height/2 + Math.random() * 20,
+          size: Math.random() * 3 + 1,
+          speed: Math.random() * 3 + 2,
+          opacity: Math.random() * 0.5 + 0.5,
+          color: `hsl(${Math.random() * 30 + 20}, 100%, 50%)`
+        });
+      }
+      
+      // Draw and update engine particles
+      for (let i = rocket.engineParticles.length - 1; i >= 0; i--) {
+        const p = rocket.engineParticles[i];
+        p.y += p.speed;
+        p.opacity -= 0.02;
+        
+        if (p.opacity <= 0) {
+          rocket.engineParticles.splice(i, 1);
+          continue;
+        }
+        
+        ctx.save();
+        ctx.globalAlpha = p.opacity;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+      
+      ctx.restore();
+    }
+
+    function gameOver() {
+      gameRunning = false;
+      
+      // Update high score if needed
+      if (money > highScore) {
+        highScore = money;
+        localStorage.setItem('asteroidHighScore', highScore);
+      }
+      
+      // Show end screen
+      finalScoreDisplay.textContent = `Scor final: ${money}`;
+      highScoreDisplay.textContent = `Cel mai bun scor: ${highScore}`;
+      endScreen.style.display = 'flex';
+      
+      // Create big explosion
+      createExplosion(rocket.x, rocket.y, 100);
+    }
+
+    function generateAsteroids() {
+      asteroids = [];
+      for (let i = 0; i < asteroidCount; i++) {
+        asteroids.push(new Asteroid());
+      }
+    }
+
+    function updateRocketPosition(event) {
+      if (gameRunning) {
+        rocket.x = event.clientX;
+        rocket.y = event.clientY;
+        
+        // Add some particles when moving
+        if (Math.random() < 0.5) {
+          particles.push({
+            x: rocket.x + (Math.random() - 0.5) * 50,
+            y: rocket.y + (Math.random() - 0.5) * 50,
+            size: Math.random() * 2 + 1,
+            speed: Math.random() * 2 + 1,
+            opacity: Math.random() * 0.5 + 0.3,
+            color: `rgba(255, 255, 255, ${Math.random() * 0.5 + 0.3})`
+          });
+        }
+      }
+    }
+
+    const stars = [];
+    function createStars() {
+      for (let i = 0; i < 200; i++) {
+        stars.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * 3 + 1,
+          speed: Math.random() * 0.5 + 0.2,
+          opacity: Math.random() * 0.5 + 0.5,
+          twinkle: Math.random() * 0.1 - 0.05,
+          currentTwinkle: 0,
+          twinkleDirection: 1
+        });
+      }
+    }
+
+    function drawStars() {
+      ctx.fillStyle = 'white';
+      stars.forEach(star => {
+        // Update twinkle effect
+        star.currentTwinkle += star.twinkle * star.twinkleDirection;
+        if (star.currentTwinkle > star.opacity || star.currentTwinkle < star.opacity * 0.5) {
+          star.twinkleDirection *= -1;
+        }
+        
+        ctx.globalAlpha = star.currentTwinkle;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      });
+    }
+
+    function updateStars() {
+      stars.forEach(star => {
+        star.y += star.speed;
+        if (star.y > canvas.height) {
+          star.y = 0;
+          star.x = Math.random() * canvas.width;
+        }
+      });
+    }
+
+    function createParticles() {
+      particles = [];
+      for (let i = 0; i < 50; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * 3 + 1,
+          speed: Math.random() * 2 + 1,
+          opacity: Math.random() * 0.5 + 0.3,
+          color: `rgba(255, 255, 255, ${Math.random() * 0.5 + 0.3})`
+        });
+      }
+    }
+
+    function updateParticles() {
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.y += p.speed;
+        p.opacity -= 0.01;
+        
+        if (p.opacity <= 0) {
+          particles.splice(i, 1);
+          continue;
+        }
+        
+        ctx.save();
+        ctx.globalAlpha = p.opacity;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+      
+      // Add new particles occasionally
+      if (Math.random() < 0.2) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: 0,
+          size: Math.random() * 3 + 1,
+          speed: Math.random() * 2 + 1,
+          opacity: Math.random() * 0.5 + 0.3,
+          color: `rgba(255, 255, 255, ${Math.random() * 0.5 + 0.3})`
+        });
+      }
+    }
+
+    function drawGroundLine() {
+      const groundHeight = 20;
+      const groundGradient = ctx.createLinearGradient(0, canvas.height - groundHeight, 0, canvas.height);
+      groundGradient.addColorStop(0, '#555');
+      groundGradient.addColorStop(1, '#222');
+      
+      ctx.fillStyle = groundGradient;
+      ctx.fillRect(0, canvas.height - groundHeight, canvas.width, groundHeight);
+      
+      // Add some ground details
+      ctx.fillStyle = '#666';
+      for (let i = 0; i < 20; i++) {
+        const x = Math.random() * canvas.width;
+        const width = Math.random() * 50 + 10;
+        const height = Math.random() * 10 + 5;
+        ctx.fillRect(x, canvas.height - groundHeight - height, width, height);
+      }
+    }
+
+    function animate() {
+      if (!gameRunning) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw space background with gradient
+      const bgGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      bgGradient.addColorStop(0, '#000033');
+      bgGradient.addColorStop(1, '#000011');
+      ctx.fillStyle = bgGradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      drawStars();
+      updateStars();
+      updateParticles();
+      drawGroundLine();
+      drawExplosions();
+      drawCoinEffects();
+
+      asteroids.forEach((asteroid, index) => {
+        if (asteroid.checkCollision(rocket)) {
+          asteroids[index] = new Asteroid();
+        }
+        
+        if (!asteroid.update()) {
+          asteroids[index] = new Asteroid();
+        }
+        asteroid.draw();
+      });
+
+      drawRocket();
+      requestAnimationFrame(animate);
+    }
+
+    // Shop Functions
+    function openShop() {
+      gameRunning = false;
+      document.getElementById('page').style.display = 'flex';
+      updateShopTexts();
+    }
+
+    function closeShop() {
+      gameRunning = true;
+      document.getElementById('page').style.display = 'none';
+      animate();
+    }
+    
+    function updateShopTexts() {
+      healthUpgradeText.textContent = `+1 ❤️ $${marime1}`;
+      rocketUpgradeText.textContent = `Mărire Rachetă $${marime2}`;
+      speedUpgradeText.textContent = `Viteză Meteoriți *0.95 $${marime3}`;
+    }
+    
+    let marime1 = 50;
+    function buyHealthUpgrade() {
+      if (money >= marime1) {
+        money -= marime1;
+        health++;
+        document.getElementById('moneyDisplay').textContent = money;
+        updateHealthDisplay();
+        marime1 *= 2;
+        updateShopTexts();
+        createCoinEffect(canvas.width/2, canvas.height/2, -marime1/2);
+      } 
+    }
+    
+    let marime2 = 100;
+    function buyRocketUpgrade() {
+      if(marime2 <= 3200) {
+        if (money >= marime2) {
+          money -= marime2;
+          rocket.width *= 1.1;
+          rocket.height *= 1.1;
+          document.getElementById('moneyDisplay').textContent = money;
+          marime2 *= 2;
+          updateShopTexts();
+          createCoinEffect(canvas.width/2, canvas.height/2, -marime2/2);
+        }
+      } else {
+        alert("Nu mai poți să cumperi upgrade-uri pentru rachetă!");
+      }
+    }
+    
+    let marime3 = 75;
+    function buySpeedUpgrade() {
+      if (money >= marime3) {
+        money -= marime3;
+        asteroidSpeedMultiplier *= 0.95; // Reduce speed by 5%
+        document.getElementById('moneyDisplay').textContent = money;
+        marime3 *= 2;
+        updateShopTexts();
+        generateAsteroids(); // Update existing asteroids speed
+        createCoinEffect(canvas.width/2, canvas.height/2, -marime3/2);
+      }
+    }
+
+    // Event Listeners
+    document.addEventListener('keydown', function(event) {
+      if (event.key.toLowerCase() === 'z' && gameRunning) {
+        openShop();
+      }
+      if (event.key.toLowerCase() === 'x') {
+        closeShop();
+      }
+    });
+
+    backButton.addEventListener('click', closeShop);
+    healthUpgrade.addEventListener('click', buyHealthUpgrade);
+    rocketUpgrade.addEventListener('click', buyRocketUpgrade);
+    speedUpgrade.addEventListener('click', buySpeedUpgrade);
+    canvas.addEventListener('mousemove', updateRocketPosition);
+    
+    // Start button handler
+    startBtn.addEventListener('click', function() {
+      playerName = playerNameInput.value.trim() || "Anonim";
+      entryScreen.style.display = 'none';
+      initGame();
+    });
+    
+    // Restart button handler
+    restartBtn.addEventListener('click', function() {
+      endScreen.style.display = 'none';
+      initGame();
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', function() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+
+    // Initialize entry screen
+    entryScreen.style.display = 'flex';
+    
+    // Create background particles
+    function createBackgroundParticles() {
+      const particlesContainer = document.getElementById('particles');
+      particlesContainer.innerHTML = '';
+      
+      for (let i = 0; i < 50; i++) {
+        const particle = document.createElement('div');
+        particle.style.position = 'absolute';
+        particle.style.width = Math.random() * 5 + 1 + 'px';
+        particle.style.height = particle.style.width;
+        particle.style.backgroundColor = `rgba(255, 255, 255, ${Math.random() * 0.5 + 0.1})`;
+        particle.style.borderRadius = '50%';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.top = Math.random() * 100 + '%';
+        particle.style.boxShadow = `0 0 ${Math.random() * 10 + 5}px rgba(255, 255, 255, 0.5)`;
+        particle.style.animation = `float ${Math.random() * 10 + 5}s linear infinite`;
+        particle.style.animationDelay = Math.random() * 5 + 's';
+        particlesContainer.appendChild(particle);
+      }
+    }
+    
+    createBackgroundParticles();
+  </script>
+</body>
+</html>
